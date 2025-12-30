@@ -1,3 +1,8 @@
+---
+layout: default
+title: 页面标题
+---
+
 # 关键定义说明
 - __image_copy_start： 地址(0X87800000)，在boot.lds文件中定义
 - _start: 地址(0X87800000)
