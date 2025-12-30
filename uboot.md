@@ -114,6 +114,7 @@ _main 函数是 U-Boot 启动流程中的 C 运行环境入口，其主要功能
 3. 调用 <a href="#board_init_f">board_init_f(0)</a> 完成硬件初始化，如内存初始化。
 4. 初始化完DDR后，并将代码重定位到DDR中，实现从OCRAM到DDR的代码迁移,调用<a href="#relocate_code">relocate_code</a>将代码拷贝到DDR中。
 5. 调用函数 <a href="#relocate_vectors">relocate_vectors</a>，对中断向量表做重定位。
+6. 调用函数<a href="#board_init_r">board_init_r</a>, 继续对硬件进行初始化
 
 
  ```arm
@@ -151,5 +152,34 @@ here:
 
 ## common/board_f.c 
 - <a id="board_init_f">board_init_f</a>
-初始化 DDR，定时器，完成代码拷贝等等
+	> 初始化 DDR，定时器，完成代码拷贝等等，通过函数 initcall_run_list 来运行初始化序列 init_sequence_f 里面的一些列函数，init_sequence_f 里面包含了一系列的初始化函数。
 
+	- setup_mon_len：设置gd.mon_len，Uboot核心代码长度(__bss_end -_start)
+	- initf_malloc: 初始化 gd 中跟 malloc 有关的成员变量
+	- env_init：设置 gd 的成员变量 env_addr，也就是环境变量的保存地址。
+	- reserve_mmu：留出 MMU 的 TLB 表的位置，16KB，但是做了64KB对齐，实际占用64KB。此时
+	- reserve_uboot：预留出uboot代码拷贝的区域，大小为gd.mon_len，也就是Uboot核心代码长度(__bss_end -_start), 并进行4KB对齐
+	- reserve_malloc：预留出malloc的区域，大小为0x1002000, 16MB+8KB
+	- reserve_board：留出板子 bd 所占的内存区，bd 是结构体 bd_t，bd_t 大小为80 字节
+	- reserve_global_data：保留出 gd_t 的内存区域，gd_t 结构体大小为 248B
+
+
+> 初始化后DRAM的地址为0x80000000,DRAM大小为512MB。SP指针为0X9EF44E90 
+![uboot内存分配图](./image/uboot_RAM.png)
+
+## arch/arm/lib/relocate.S 代码重定位
+- <a id="relocate_code">relocate_code</a>
+	> 代码移动到DDR中后，需要对代码中绝对地址进行重定位，将地址加上偏移地址指向DDR中的新地址。在编译过程中，程序生成了一张“变量地址修正表”（.rel.dyn 段）。
+
+- <a id="relocate_vectors">relocate_vectors</a>
+	> 重定位向量表,将新的中断向量表位置写入VBAR寄存器中
+
+## common/board_r.c
+- <a id="board_init_r">board_init_r</a>
+	> 继续对硬件进行初始化，通过init_sequence_r初始化序列来完成包括时钟初始化、串口初始化、网卡初始化等。初始化完成后，就会跳转到linux系统。
+	- board_init 板级初始化，初始化外围芯片、IIC、USB等。执行的是mx6ull_alientek_emmc.c 文件中的board_init函数。
+	- initr_env 初始化环境变量，读取环境变量文件，并设置环境变量。
+	- run_main_loop</a> 运行主循环，调用<a href="#main_loop">main_loop</a>函数，等待用户输入命令。main_loop中为死循环，如果linux设置正常，则会自动启动linux系统。
+
+## common/main.c
+- <a id="main_loop">main_loop</a>     
