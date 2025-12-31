@@ -1,228 +1,25 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技术博客 - U-Boot 启动流程详解</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+---
+layout: home-page
+---
+{% include calculate_relative_base.html %}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            padding: 60px 20px 40px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .header h1 {
-            font-size: 3.5em;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.3em;
-            opacity: 0.95;
-            font-weight: 300;
-        }
-
-        .content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeInUp 0.8s ease-out;
-            animation-fill-mode: both;
-        }
-
-        .card:nth-child(1) {
-            animation-delay: 0.2s;
-        }
-
-        .card:nth-child(2) {
-            animation-delay: 0.4s;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-icon {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .card h2 {
-            color: #333;
-            font-size: 1.8em;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .card p {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 25px;
-            line-height: 1.8;
-        }
-
-        .card-link {
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .card-link:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: 60px;
-            padding: 30px 20px;
-            opacity: 0.9;
-            font-size: 0.95em;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2.5em;
-            }
-
-            .header p {
-                font-size: 1.1em;
-            }
-
-            .content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .card {
-                padding: 30px;
-            }
-        }
-
-        .feature-list {
-            list-style: none;
-            margin-top: 20px;
-        }
-
-        .feature-list li {
-            padding: 10px 0;
-            color: #555;
-            font-size: 1em;
-            position: relative;
-            padding-left: 25px;
-        }
-
-        .feature-list li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 技术博客</h1>
-            <p>深入理解嵌入式系统启动流程</p>
-        </div>
-
-        <div class="content">
-            <div class="card">
-                <span class="card-icon">📚</span>
-                <h2>U-Boot 启动流程</h2>
-                <p>详细解析 U-Boot 从启动到运行的完整流程，包括前期启动、_main 阶段、代码重定位等关键步骤。</p>
-                <ul class="feature-list">
-                    <li>前期启动流程详解</li>
-                    <li>_main 阶段分析</li>
-                    <li>代码重定位机制</li>
-                    <li>内存分配图解</li>
-                </ul>
-                <a href="./uboot.html" class="card-link">查看文档 →</a>
-            </div>
-
-            <div class="card">
-                <span class="card-icon">💡</span>
-                <h2>关于项目</h2>
-                <p>这是一个专注于嵌入式系统底层技术的学习博客，记录和分享 U-Boot、Linux 内核等关键技术的深入理解。</p>
-                <ul class="feature-list">
-                    <li>技术文档分享</li>
-                    <li>源码级分析</li>
-                    <li>流程图解说明</li>
-                    <li>持续更新中</li>
-                </ul>
-                <a href="https://github.com/puppet-sky/puppet-sky.github.io" class="card-link" target="_blank">访问 GitHub →</a>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>© 2025 技术博客 | 用心分享，共同成长</p>
-        </div>
+<ol class="post-card-box clearfix">
+  {% for post in paginator.posts %}
+  {% include remove_double_slash.html %}
+  <li>
+    <div class="post-card">
+      <a href="{{ post_url }}" title="{{ post.title }}" class="post-card-image" style="background: url('{{ relativebase }}assets/img/{{ post.img }}') center no-repeat; background-size: cover;">
+      </a>
+      <div class="post-card-body">
+        <p class="post-card-title-and-meta">
+          
+          <a href="{{ post_url }}" class="post-card-link">
+          {{ post.title }}
+          </a>
+          {% include post_meta.html type="post-card-meta" date="none" %}
+        </p>
+      </div>
     </div>
-</body>
-</html>
-
+  </li>
+  {% endfor %}
+</ol>
