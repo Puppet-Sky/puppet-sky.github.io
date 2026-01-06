@@ -1,4 +1,4 @@
 [submodule "themes/particlex"]
 	path = themes/particlex
-	url = https://github.com/theme-particlex/hexo-theme-particlex.git
-	branch = particlex
+	url = https://github.com/Puppet-Sky/ParticleX.git
+	branch = main
