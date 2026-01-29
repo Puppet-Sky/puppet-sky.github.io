@@ -42,12 +42,29 @@ filename_case: 0
 render_drafts: false
 post_asset_folder: false
 relative_link: false
+# marked:
+#   prependRoot: true
+#   postAsset: true
+
 future: true
-syntax_highlighter:
+syntax_highlighter: 
 highlight:
-  enable: false
+  enable: true
+  auto_detect: false    # 建议关闭，手动指定语言(如 ```js) 渲染速度更快
+  # line_number: true     # 开启行号
+  # line_threshold: 0
+  tab_replace: '  '     # 将 Tab 替换为 2 个空格
+  wrap: true            # 使用 table 标签包裹，解决行号错位问题
+  hljs: false            # 为代码块生成 .hljs 类名，确保兼容通用 CSS 主题
+  exclude_languages:    # 排除不需要高亮的语言
+    - mermaid
+
 prismjs:
-  enable: false
+  enable: true
+  preprocess: true
+  line_number: true
+  line_threshold: 0
+  tab_replace: "  "
 
 archive_generator:
     enabled: true

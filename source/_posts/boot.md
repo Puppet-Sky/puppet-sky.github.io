@@ -10,6 +10,7 @@ tags: [uboot, linux]
 - CONFIG_SYS_INIT_RAM_ADDR ：0X00900000。芯片内部OCRAM地址
 - CONFIG_SYS_INIT_RAM_SIZE ：0X00040000。芯片内部OCRAM大小
 - CONFIG_SYS_INIT_SP_ADDR：0X0091FF00。初始化的栈地址
+- LINUX_ARM_ZIMAGE_MAGIC：0x016f2818。Linux内核镜像魔数，用于判断内核镜像是否合法。
 <!-- more -->
 # Uboot前期启动流程（前期启动是指在DDR初始化之前，完成CPU、内存等硬件的初始化）
 
@@ -107,7 +108,7 @@ void s_init(void)
 ```
 
 ## 前期启动函数调用路径图
-![前期启动函数调用路径图](./image/save_boot_params_ret.png)
+![前期启动函数调用路径图](../image/save_boot_params_ret.png)
 
 # _main阶段启动流程
 
@@ -158,7 +159,7 @@ here:
 
 ## common/board_f.c 
 - <a id="board_init_f">board_init_f</a>
-	> 初始化 DDR，定时器，完成代码拷贝等等，通过函数 initcall_run_list 来运行初始化序列 init_sequence_f 里面的一些列函数，init_sequence_f 里面包含了一系列的初始化函数。
+    > 初始化 DDR，定时器，完成代码拷贝等等，通过函数 initcall_run_list 来运行初始化序列 init_sequence_f 里面的一些列函数，init_sequence_f 里面包含了一系列的初始化函数。
 
 	- setup_mon_len：设置gd.mon_len，Uboot核心代码长度(__bss_end -_start)
 	- initf_malloc: 初始化 gd 中跟 malloc 有关的成员变量
@@ -171,11 +172,11 @@ here:
 
 
 > 初始化后DRAM的地址为0x80000000,DRAM大小为512MB。SP指针为0X9EF44E90 
-![uboot内存分配图](./image/uboot_RAM.png)
+![uboot内存分配图](../image/uboot_RAM.png)
 
 ## arch/arm/lib/relocate.S 代码重定位
 - <a id="relocate_code">relocate_code</a>
-	> 代码移动到DDR中后，需要对代码中绝对地址进行重定位，将地址加上偏移地址指向DDR中的新地址。在编译过程中，程序生成了一张“变量地址修正表”（.rel.dyn 段）。
+    > 代码移动到DDR中后，需要对代码中绝对地址进行重定位，将地址加上偏移地址指向DDR中的新地址。在编译过程中，程序生成了一张"变量地址修正表"（.rel.dyn 段）。
 
 - <a id="relocate_vectors">relocate_vectors</a>
 	> 重定位向量表,将新的中断向量表位置写入VBAR寄存器中
@@ -188,4 +189,125 @@ here:
 	- run_main_loop</a> 运行主循环，调用<a href="#main_loop">main_loop</a>函数，等待用户输入命令。main_loop中为死循环，如果linux设置正常，则会自动启动linux系统。
 
 ## common/main.c
-- <a id="main_loop">main_loop</a>     
+- <a id="main_loop">main_loop</a>   
+	> 主循环，等待用户输入命令。main_loop中为死循环，如果linux设置正常，则会自动启动linux系统。  
+	- run_preboot_environment_command: 运行预启动环境命令，读取环境变量文件，并设置环境变量。一般不使用
+	- bootdelay_process：读取环境变量 bootdelay 和 bootcmd 的内容，最终会返回bootcmd的值，为一个字符串，如“bootz”，并在倒计时结束时执行<a href="#do_bootz">***do_bootz***</a>函数。
+	- autoboot_command：检查倒计时是否结束， 倒计时结束之前有没有被打断，如果在时间限制内没有被打断则执行run_command_list，也就是环境变量 <a href="#bootcmd">bootcmd</a> 的命令；如果被打断则，进入<a href="#cli_loop">cli_loop</a>，cli_loop最终会调用<a href="#parse_stream_outer">parse_stream_outer</a>函数进行命令行交互。
+
+## common/cli.c
+- <a id="cli_loop">cli_loop</a>
+
+## common/cli_hush.c
+- <a id="parse_stream_outer">parse_stream_outer</a>
+	> 调用函数 parse_stream 进行命令解析, 解析结果存放在 ***struct p_context***结构体中调用 run_list函数来执行解析出来的命令，最终调用<a href="#cmd_process">cmd_process</a>函数来执行命令。
+
+## common/command.c
+- <a id="cmd_process">cmd_process</a>
+	> 执行命令，对输入指令进行解析，并执行命令。程序中定义的指令通过U_BOOT_CMD()宏定义进行注册。注册过程实际为定义了一个***cmd_tbl_t***结构体数组，数组中存储了指令的名称、帮助信息、执行函数等信息。
+	> U_BOOT_CMD()宏定义如下：
+
+```c
+#define U_BOOT_CMD(_name, _maxargs, _rep, _cmd, _usage, _help)
+ ```
+
+> 最终展开为***cmd_tbl_t***结构体数组，以dhcp命令为例：
+
+
+```c
+U_BOOT_CMD(dhcp, 3, 1, do_dhcp,
+"boot image via network using DHCP/TFTP protocol",
+"[loadAddress] [[hostIPaddr:]bootfilename]"
+);
+// 展开为
+cmd_tbl_t _u_boot_list_2_cmd_2_dhcp __aligned(4)  \
+	__attribute__((unused,section(.u_boot_list_2_cmd_2_dhcp))) \
+	{ "dhcp", 3, 1, do_dhcp, \
+	"boot image via network using DHCP/TFTP protocol", \
+	"[loadAddress] [[hostIPaddr:]bootfilename]",\
+	NULL };
+```  
+> cmd_tbl_t 结构体定义如下：
+
+
+```c
+struct cmd_tbl_s {
+	char		*name;		/* Command Name			*/
+	int		maxargs;	/* maximum number of arguments	*/
+	int		repeatable;	/* autorepeat allowed?		*/
+					/* Implementation function	*/
+	int		(*cmd)(struct cmd_tbl_s *, int, int, char * const []);
+	char		*usage;		/* Usage message	(short)	*/
+#ifdef	CONFIG_SYS_LONGHELP
+	char		*help;		/* Help  message	(long)	*/
+#endif
+#ifdef CONFIG_AUTO_COMPLETE
+	/* do auto completion on the arguments */
+	int		(*complete)(int argc, char * const argv[], char last_char, int maxv, char *cmdv[]);
+#endif
+};
+
+typedef struct cmd_tbl_s	cmd_tbl_t;
+```
+> 通过find_cmd函数在cmd_tbl_t数组中找到dhcp命令，并调用do_dhcp函数执行命令。
+
+## cmd/bootm.c
+> 系统启动关键结构体定义：bootm_headers_t
+```c
+/*
+ * Legacy and FIT format headers used by do_bootm() and do_bootm_<os>()
+ * routines.
+ */
+typedef struct bootm_headers {
+	/*
+	 * Legacy os image header, if it is a multi component image
+	 * then boot_get_ramdisk() and get_fdt() will attempt to get
+	 * data from second and third component accordingly.
+	 */
+	image_header_t	*legacy_hdr_os;		/* image header pointer */
+	image_header_t	legacy_hdr_os_copy;	/* header copy */
+	ulong		legacy_hdr_valid;
+
+
+#ifndef USE_HOSTCC
+	image_info_t	os;		/* os image info */
+	ulong		ep;		/* entry point of OS */
+
+	ulong		rd_start, rd_end;/* ramdisk start/end */
+
+	char		*ft_addr;	/* flat dev tree address */
+	ulong		ft_len;		/* length of flat device tree */
+
+	ulong		initrd_start;
+	ulong		initrd_end;
+	ulong		cmdline_start;
+	ulong		cmdline_end;
+	bd_t		*kbd;
+#endif
+
+	int		verify;		/* getenv("verify")[0] != 'n' */
+
+#define	BOOTM_STATE_START	(0x00000001)
+#define	BOOTM_STATE_FINDOS	(0x00000002)
+#define	BOOTM_STATE_FINDOTHER	(0x00000004)
+#define	BOOTM_STATE_LOADOS	(0x00000008)
+#define	BOOTM_STATE_RAMDISK	(0x00000010)
+#define	BOOTM_STATE_FDT		(0x00000020)
+#define	BOOTM_STATE_OS_CMDLINE	(0x00000040)
+#define	BOOTM_STATE_OS_BD_T	(0x00000080)
+#define	BOOTM_STATE_OS_PREP	(0x00000100)
+#define	BOOTM_STATE_OS_FAKE_GO	(0x00000200)	/* 'Almost' run the OS */
+#define	BOOTM_STATE_OS_GO	(0x00000400)
+	int		state;
+
+#ifdef CONFIG_LMB
+	struct lmb	lmb;		/* for memory mgmt */
+#endif
+} bootm_headers_t;
+```
+- <a id="do_bootz">do_bootz</a>
+	> 调用 <a href="#bootz_start">bootz_start</a> 函数  
+	> 调用函数 bootm_disable_interrupts 关闭中断
+	> 调用函数 do_bootm_states 来执行不同的 BOOT 阶段，这里要执行的 BOOT 阶段有：BOOTM_STATE_OS_PREP 、BOOTM_STATE_OS_FAKE_GO 和BOOTM_STATE_OS_GO。
+
+- <a id="bootz_start">bootz_start</a>
