@@ -4,6 +4,13 @@ date: 2026-01-04 13:55:04
 tags: [uboot, linux]
 ---
 
+# 目录
+1. [关键定义说明](#关键定义说明)
+2. [Uboot前期启动流程](#Uboot前期启动流程)
+3. [_main阶段启动流程](#main阶段启动流程)
+4. [do_bootz启动流程](#do-bootz启动流程)
+<!-- more -->
+
 # 关键定义说明
 - __image_copy_start： 地址(0X87800000)，在boot.lds文件中定义
 - _start: 地址(0X87800000)
@@ -11,8 +18,10 @@ tags: [uboot, linux]
 - CONFIG_SYS_INIT_RAM_SIZE ：0X00040000。芯片内部OCRAM大小
 - CONFIG_SYS_INIT_SP_ADDR：0X0091FF00。初始化的栈地址
 - LINUX_ARM_ZIMAGE_MAGIC：0x016f2818。Linux内核镜像魔数，用于判断内核镜像是否合法。
-<!-- more -->
-# Uboot前期启动流程（前期启动是指在DDR初始化之前，完成CPU、内存等硬件的初始化）
+
+# Uboot前期启动流程
+
+> 前期启动是指在DDR初始化之前，完成CPU、内存等硬件的初始化。
 
 ## boot.lds 编译连接文件
 - ENTRY(_start) 为程序入口点，**_start**为汇编函数，定义在 ++*arch/arm/lib/vectors.S*++。下一步切入 <a href="#reset">reset</a>
@@ -110,7 +119,7 @@ void s_init(void)
 ## 前期启动函数调用路径图
 ![前期启动函数调用路径图](../image/save_boot_params_ret.png)
 
-# _main阶段启动流程
+# main阶段启动流程
 
 ## arch/arm/lib/crt0.S _main阶段启动入口汇编程序
 - <a id="_main">_main</a>
@@ -250,6 +259,8 @@ struct cmd_tbl_s {
 typedef struct cmd_tbl_s	cmd_tbl_t;
 ```
 > 通过find_cmd函数在cmd_tbl_t数组中找到dhcp命令，并调用do_dhcp函数执行命令。
+
+# do-bootz启动流程
 
 ## cmd/bootm.c
 > 系统启动关键结构体定义：bootm_headers_t
