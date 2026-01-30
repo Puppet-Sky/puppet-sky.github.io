@@ -289,3 +289,5 @@ main_control_thread_entry()
 
 ---
 
+## 附录代码
+> 实际代码长度过长，不便于阅读，因此只贴出关键代码。实际代码请跳转到{% post_link code code %}。 
