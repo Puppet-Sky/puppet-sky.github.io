@@ -1,5 +1,5 @@
 ---
-title: boot
+title: Uboot启动流程
 date: 2026-01-04 13:55:04
 tags: [uboot, linux]
 ---
@@ -308,6 +308,81 @@ typedef struct bootm_headers {
 - <a id="do_bootz">do_bootz</a>
 	> 调用 <a href="#bootz_start">bootz_start</a> 函数  
 	> 调用函数 bootm_disable_interrupts 关闭中断
-	> 调用函数 do_bootm_states 来执行不同的 BOOT 阶段，这里要执行的 BOOT 阶段有：BOOTM_STATE_OS_PREP 、BOOTM_STATE_OS_FAKE_GO 和BOOTM_STATE_OS_GO。
+	> 调用函数 <a href="#do_bootm_states">do_bootm_states</a> 来执行不同的 BOOT 阶段，这里要执行的 BOOT 阶段有：BOOTM_STATE_OS_PREP 、BOOTM_STATE_OS_FAKE_GO 和BOOTM_STATE_OS_GO。
 
 - <a id="bootz_start">bootz_start</a>
+
+- <a id="do_bootm_states">do_bootm_states</a>
+	> 执行不同的 BOOT 阶段，这里要执行的 BOOT 阶段有：BOOTM_STATE_OS_PREP 、BOOTM_STATE_OS_FAKE_GO 和BOOTM_STATE_OS_GO。从**bootm_os_get_boot_func**函数中获取当前系统启动函数的启动，并在**boot_selected_os**中启动该函数。linux系统中最终的启动函数为<a href="#do_bootm_linux">do_bootm_linux</a>。
+
+- <a id="do_bootm_linux">do_bootm_linux</a>
+	> 传入参数为***BOOTM_STATE_OS_GO***，因此最终只会去调用<a href="#boot_jump_linux">boot_jump_linux</a>函数。
+
+- <a id="boot_jump_linux">boot_jump_linux</a>
+	> 在前期阶段获取到LINUX系统镜像入口函数地址，直接跳转到该函数地址进行执行，并传入设备树地址。
+	
+```c
+static void boot_jump_linux(bootm_headers_t *images, int flag)
+{
+#ifdef CONFIG_ARM64
+	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
+			void *res2);
+	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
+
+	kernel_entry = (void (*)(void *fdt_addr, void *res0, void *res1,
+				void *res2))images->ep;
+
+	debug("## Transferring control to Linux (at address %lx)...\n",
+		(ulong) kernel_entry);
+	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
+
+	announce_and_cleanup(fake);
+
+	if (!fake) {
+		do_nonsec_virt_switch();
+		kernel_entry(images->ft_addr, NULL, NULL, NULL);
+	}
+#else
+	unsigned long machid = gd->bd->bi_arch_number;
+	char *s;
+	void (*kernel_entry)(int zero, int arch, uint params);
+	unsigned long r2;
+	int fake = (flag & BOOTM_STATE_OS_FAKE_GO);
+
+	kernel_entry = (void (*)(int, int, uint))images->ep;
+
+	s = getenv("machid");
+	if (s) {
+		if (strict_strtoul(s, 16, &machid) < 0) {
+			debug("strict_strtoul failed!\n");
+			return;
+		}
+		printf("Using machid 0x%lx from environment\n", machid);
+	}
+
+	debug("## Transferring control to Linux (at address %08lx)" \
+		"...\n", (ulong) kernel_entry);
+	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
+	announce_and_cleanup(fake);
+
+	if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)
+		r2 = (unsigned long)images->ft_addr;
+	else
+		r2 = gd->bd->bi_boot_params;
+
+	if (!fake) {
+#ifdef CONFIG_ARMV7_NONSEC
+		if (armv7_boot_nonsec()) {
+			armv7_init_nonsec();
+			secure_ram_addr(_do_nonsec_entry)(kernel_entry,
+							  0, machid, r2);
+		} else
+#endif
+			kernel_entry(0, machid, r2);
+	}
+#endif
+}
+```
+
+> 最终do_bootz函数调用路径图如下：
+![do_bootz函数调用路径图](../image/do_bootz.png)
