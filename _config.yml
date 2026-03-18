@@ -123,4 +123,4 @@ theme: particlex
 deploy:
   type: git
   repo: git@github.com:Puppet-Sky/puppet-sky.github.io.git
-  branch: publish
+  branch: main
