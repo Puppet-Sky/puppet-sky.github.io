@@ -1,0 +1,732 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>软件I2C封装 | 松子の小窝</title>
+    <meta name="author" content="puppet-sky" />
+    <meta name="description" content="个人小站" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>松子の小窝</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;松子の小窝</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>软件I2C封装</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2026/1/30
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h1><ol>
+<li><a href="#H%E6%96%87%E4%BB%B6%E5%AE%9A%E4%B9%89">H文件定义</a></li>
+<li><a href="#%E7%A1%AC%E4%BB%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E9%83%A8%E5%88%86">硬件初始化部分</a></li>
+<li><a href="#%E7%A1%AC%E4%BB%B6%E6%8E%A7%E5%88%B6%E5%B0%81%E8%A3%85%E9%83%A8%E5%88%86">硬件控制封装部分</a></li>
+<li><a href="#%E6%97%B6%E5%BA%8F%E6%8E%A7%E5%88%B6%E9%83%A8%E5%88%86">时序控制部分</a></li>
+<li><a href="#%E8%AF%BB%E5%86%99%E6%93%8D%E4%BD%9C%E9%83%A8%E5%88%86">读写操作部分</a></li>
+</ol>
+<span id="more"></span>
+
+<h1 id="分享缘由"><a href="#分享缘由" class="headerlink" title="分享缘由"></a>分享缘由</h1><p>因为项目需要，经常需要主控MCU对I2C模块进行操作，但之前的项目怎么说了，I2C这块写得很乱，而且一个项目里面经常会有好几个模拟I2C的程序，硬件层控制与时序层代码完全没有解耦，以至于想要复用代码基本要把整个代码重新梳理一遍，要是漏了一点没有改到，那这个I2C就废了。经历过几次后，发现不如自己重新写一个。这次代码比较简单，一共抽象封装了四层，一个硬件初始化部分，一个硬件控制封装部分，一个时序部分，一个是读写操作部分。不废话了，直接上代码。</p>
+<h2 id="H文件定义"><a href="#H文件定义" class="headerlink" title="H文件定义"></a>H文件定义</h2><p>H文件定义了一个基本的I2C数据结构，I2C管脚以及I2C速率控制，其实还可以在这个封装里加入<code>读写操作函数，初始化函数</code>，让这个I2C封装性更好一点。然后就是声明对外的函数接口，让调用者不需要关心内部函数如何实现。</p>
+<pre><code class="language-c">	/*----------------------------------------------*
+ *  数据类型定义                                *
+ *----------------------------------------------*/
+typedef struct
+{
+    uint32_t SCL_GPIO;          //SCL GPIO口
+    uint32_t SCL_Pin;           //SCL PIN脚
+    uint32_t SDA_GPIO;          //SDA GPIO口
+    uint32_t SDA_PIN;           //SDA PIN脚
+    uint32_t I2C_Speed;         //I2C速率
+    /*********************************
+    void (*init)(void *paramater);		这三个函数是在写博客的时候突然想到，但在下面的代码并没有用
+    void (*read)(void *paraneter);		如果，有需要可以用起来，这个当做留个坑吧
+    void (*write)(void *parameter);
+    ************************************/
+}I2C_Struct;
+
+typedef enum{I2C_ACK = 0, I2C_NACK = !I2C_ACK}I2C_ACKFlag; 
+
+/*----------------------------------------------*
+ *  函数声明                                    *
+ *----------------------------------------------*/
+void rt_hw_soft_I2C_init(void);
+uint8_t soft_i2c_read_bytes(I2C_Struct * i2c, uint8_t Device_Addr, uint8_t Register_Addr, void *data, uint16_t data_len);
+</code></pre>
+<h2 id="硬件初始化部分"><a href="#硬件初始化部分" class="headerlink" title="硬件初始化部分"></a>硬件初始化部分</h2><p>这部分没啥好说的，根据I2C协议，需要将管脚配置成开漏，然后就是各个单片机对管脚初始化的过程和初始化函数的调用，完成I2C初始化。以GD32为例：<del>其实这部分写得很差，明明都定义了I2C_Struct为什么当时没用</del></p>
+<pre><code class="language-c">/*************************宏定义部分，对管脚进行封装**************************************/
+#ifdef RT_USING_I2C0
+#define I2C0_SDA_PIN		    GPIO_PIN_7      //GPIO_PIN_9
+#define I2C0_SDA_PIN_SOURCE     GPIO_AF_4
+#define I2C0_SCL_PIN		    GPIO_PIN_6      //GPIO_PIN_8
+#define I2C0_SCL_PIN_SOURCE     GPIO_AF_4
+#define I2C0_SDA_GPIO			GPIOB
+#define I2C0_SCL_GPIO			GPIOB
+#define I2C0_SDA_GPIO_RCC       RCU_GPIOB
+#define I2C0_SCL_GPIO_RCC       RCU_GPIOB
+#define RCC_I2C0	            RCU_I2C0
+#endif /*RT_USING_I2C0*/
+    
+    
+#ifdef RT_USING_I2C1
+#define I2C1_SDA_PIN	        GPIO_PIN_11
+#define I2C1_SDA_PIN_SOURCE     GPIO_AF_4
+#define I2C1_SCL_PIN	        GPIO_PIN_10
+#define I2C1_SCL_PIN_SOURCE     GPIO_AF_4
+#define I2C1_SDA_GPIO	    	GPIOB
+#define I2C1_SCL_GPIO	    	GPIOB
+#define I2C1_SDA_GPIO_RCC   	RCU_GPIOB
+#define I2C1_SCL_GPIO_RCC   	RCU_GPIOB
+#define RCC_I2C1	    RCU_I2C1
+#endif /*RT_USING_I2C1*/
+    
+    
+#ifdef RT_USING_I2C2
+#define I2C2_SDA_PIN		    GPIO_PIN_9
+#define I2C2_SDA_PIN_SOURCE     GPIO_AF_4
+#define I2C2_SCL_PIN		    GPIO_PIN_8
+#define I2C2_SCL_PIN_SOURCE     GPIO_AF_4
+#define I2C2_SDA_GPIO			GPIOC
+#define I2C2_SCL_GPIO			GPIOA
+#define I2C2_SDA_GPIO_RCC   	RCU_GPIOC
+#define I2C2_SCL_GPIO_RCC   	RCU_GPIOA
+#define RCC_I2C2	            RCU_I2C2
+#endif /*RT_USING_I2C2*/
+
+/*初始化管脚功能*/
+static void soft_I2C_RCC_Configuration(void)
+{
+#ifdef RT_USING_I2C0
+    /* Enable I2C0  SDA/SCL GPIO clocks */
+    rcu_periph_clock_enable(I2C0_SCL_GPIO_RCC);
+    rcu_periph_clock_enable(I2C0_SDA_GPIO_RCC);
+#endif
+}
+static void soft_I2C_GPIO_Configuration(void)
+{
+#ifdef RT_USING_I2C0
+     /* configure USART Tx as alternate function push-pull */
+    gpio_mode_set(I2C0_SCL_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, I2C0_SCL_PIN);
+    gpio_output_options_set(I2C0_SCL_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, I2C0_SCL_PIN);
+
+    /* configure USART Rx as alternate function push-pull */
+    gpio_mode_set(I2C0_SDA_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, I2C0_SDA_PIN);
+    gpio_output_options_set(I2C0_SDA_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, I2C0_SDA_PIN);
+    gpio_bit_set(I2C0_SDA_GPIO, I2C0_SDA_PIN);
+    gpio_bit_set(I2C0_SCL_GPIO, I2C0_SCL_PIN);
+#endif
+}
+/*此函数才是最终提供给外部的接口函数，需要在此函数完成管脚初始化*/
+void rt_hw_soft_I2C_init(void)
+{
+    soft_I2C_RCC_Configuration();
+    soft_I2C_GPIO_Configuration();
+}
+</code></pre>
+<h2 id="硬件控制封装部分"><a href="#硬件控制封装部分" class="headerlink" title="硬件控制封装部分"></a>硬件控制封装部分</h2><p>这部分代码与各个硬件息息相关，不能照搬，需要自己按照自己板子，去实现9个函数功能</p>
+<pre><code class="language-c">/*I2C软件延时函数*/
+static void soft_i2c_us_delay(I2C_Struct *i2c)
+{
+    rt_hw_us_delay(i2c-&gt;I2C_Speed);
+}
+
+/*将SDA线设置成输出模式*/
+void soft_I2C_SDA_OUT(I2C_Struct *i2c)
+{
+    gpio_mode_set(i2c-&gt;SDA_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, i2c-&gt;SDA_PIN);
+    gpio_output_options_set(i2c-&gt;SDA_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, i2c-&gt;SDA_PIN);
+    gpio_bit_set(i2c-&gt;SDA_GPIO, i2c-&gt;SDA_PIN);
+}
+
+/*将SDA线设置成输入模式*/
+void soft_I2C_SDA_IN(I2C_Struct *i2c)
+{
+    gpio_mode_set(i2c-&gt;SDA_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, i2c-&gt;SDA_PIN);
+}
+
+/*读取SDA输入*/
+FlagStatus soft_i2c_SDA_read(I2C_Struct *i2c)
+{
+    return gpio_input_bit_get(i2c-&gt;SDA_GPIO, i2c-&gt;SDA_PIN);
+}
+
+/*拉高SDA线*/
+void soft_i2c_SDA_set(I2C_Struct *i2c)
+{
+    gpio_bit_set(i2c-&gt;SDA_GPIO, i2c-&gt;SDA_PIN);
+}
+
+/*拉低SDA线*/
+void soft_i2c_SDA_reset(I2C_Struct *i2c)
+{
+    gpio_bit_reset(i2c-&gt;SDA_GPIO, i2c-&gt;SDA_PIN);
+}
+
+/*拉高SCL线*/
+void soft_i2c_SCL_set(I2C_Struct *i2c)
+{
+    gpio_bit_set(i2c-&gt;SCL_GPIO, i2c-&gt;SCL_Pin);
+}
+
+
+/*拉低SCL线*/
+void soft_i2c_SCL_reset(I2C_Struct *i2c)
+{
+    gpio_bit_reset(i2c-&gt;SCL_GPIO, i2c-&gt;SCL_Pin);
+}
+
+/*读取时钟线状态*/
+uint8_t soft_i2c_SCL_input(I2C_Struct *i2c)
+{
+    return gpio_input_bit_get(i2c-&gt;SCL_GPIO, i2c-&gt;SCL_Pin);
+}
+</code></pre>
+<h2 id="时序控制部分"><a href="#时序控制部分" class="headerlink" title="时序控制部分"></a>时序控制部分</h2><p>这部分没啥好说的，必须严格按照I2C协议去编写。如果你认真实现硬件控制部分的9个函数，这部分原则上是不需要进行修改就能使用的。<br>这里必须贴个链接，在之前调试时序的时候，读数据老是出现问题，虽然之前就有感觉我写的时序可能会有点BUG。<br><a target="_blank" rel="noopener" href="https://www.codeprj.com/blog/7ef3991.html">I2C时序调试过程中出现的问题</a></p>
+<pre><code class="language-c">/************************************软件I2C时序函数*******************************************/
+//产生IIC起始信号
+static void soft_i2c_start(I2C_Struct *i2c)
+{
+    uint16_t temp = 0;
+    soft_I2C_SDA_OUT(i2c);
+    /*恢复初始状态*/
+    soft_i2c_SDA_set(i2c);
+    soft_i2c_us_delay(i2c);
+    soft_i2c_SCL_set(i2c); 
+    soft_i2c_us_delay(i2c);
+
+    while(soft_i2c_SCL_input(i2c) == 0)
+    {
+        if(temp++ &gt; 20000)
+            return;
+    }
+    
+    /*当SCL为高时，拉到SDA，表示一个启动信号*/
+    soft_i2c_us_delay(i2c);
+    soft_i2c_SDA_reset(i2c);
+    soft_i2c_us_delay(i2c);
+    /*钳住I2C总线，准备发送数据*/
+    soft_i2c_SCL_reset(i2c);
+}
+
+//产生IIC停止信号
+void soft_i2c_stop(I2C_Struct *i2c)
+{
+    soft_I2C_SDA_OUT(i2c);
+
+    /*准备发送结束信号*/
+    soft_i2c_SCL_reset(i2c);
+    soft_i2c_SDA_reset(i2c);
+    soft_i2c_us_delay(i2c);
+    /*发送结束信号*/
+    soft_i2c_SCL_set(i2c);
+    soft_i2c_us_delay(i2c);
+    soft_i2c_SDA_set(i2c);
+
+    /*发送完成，释放总线*/
+    soft_i2c_us_delay(i2c);
+}
+
+//等待应答信号到来
+//返回值：1，接收应答成功
+//        0，接收应答失败
+FlagStatus soft_i2c_wait_ack(I2C_Struct * i2c)
+{
+    uint16_t temp = 0;
+    FlagStatus read_bit = SET;
+    /*释放SDA线*/
+    soft_i2c_SCL_reset(i2c);
+    soft_i2c_SDA_set(i2c);
+    /*设置成输入模式*/
+    soft_I2C_SDA_IN(i2c);
+
+    /*准备产生一个时钟脉冲读取ACK*/
+    soft_i2c_us_delay(i2c);
+    soft_i2c_SCL_set(i2c);
+    soft_i2c_us_delay(i2c);
+
+    while(soft_i2c_SCL_input(i2c) == 0)
+    {
+        if(temp++ &gt; 20000)
+            return SET;
+    }
+
+    read_bit = soft_i2c_SDA_read(i2c);
+    soft_i2c_us_delay(i2c);
+    soft_i2c_SCL_reset(i2c);
+    /*读取ACK信号*/
+   return read_bit;
+}
+
+//被控器产生ACK应答
+void soft_i2c_ack(I2C_Struct * i2c)
+{
+    soft_I2C_SDA_OUT(i2c);
+
+    /*SDA: 低电平， ACK*/
+    soft_i2c_SCL_reset(i2c);
+    soft_i2c_us_delay(i2c);
+    
+    soft_i2c_SDA_reset(i2c);
+    soft_i2c_us_delay(i2c);
+
+    /*发送ACK信号*/
+    soft_i2c_SCL_set(i2c);
+    soft_i2c_us_delay(i2c);
+
+    /*继续钳住总线*/
+    soft_i2c_SCL_reset(i2c);
+}
+
+//被控器不产生ACK应答，将数据线置高电平，释放总线，产生一个停止信号信号来终止数据传输。		    
+void soft_i2c_nack(I2C_Struct * i2c)
+{
+    soft_I2C_SDA_OUT(i2c);
+
+    /*SDA: 低电平， ACK*/
+    soft_i2c_SCL_reset(i2c);
+    soft_i2c_us_delay(i2c);
+    
+    soft_i2c_SDA_set(i2c);
+    soft_i2c_us_delay(i2c);
+
+    /*发送ACK信号*/
+    soft_i2c_SCL_set(i2c);
+    soft_i2c_us_delay(i2c);
+
+    /*继续钳住总线*/
+    soft_i2c_SCL_reset(i2c);
+}
+
+/*传输一字节数据*/
+void soft_i2c_send_byte(I2C_Struct * i2c, uint8_t data)
+{
+    uint16_t temp = 0;
+    soft_I2C_SDA_OUT(i2c);
+    
+    /*MSB先传*/
+    for(int i = 0; i &lt; 8; i++)
+    {
+        /*拉低时钟线线开始传送*/
+        soft_i2c_SCL_reset(i2c);
+        soft_i2c_us_delay(i2c);
+        
+        /*按位传输数据*/
+        if(data &amp; (0x80 &gt;&gt; i))
+            soft_i2c_SDA_set(i2c);
+        else
+            soft_i2c_SDA_reset(i2c);
+
+        /*维持一个delay, 拉高SCL, 开始传输*/
+        soft_i2c_us_delay(i2c);
+        soft_i2c_SCL_set(i2c);
+        soft_i2c_us_delay(i2c);
+
+        while(soft_i2c_SCL_input(i2c) == 0)
+        {
+            if(temp++ &gt; 20000)
+                return;
+        }
+    }
+
+    soft_i2c_SCL_reset(i2c);
+}
+
+/*读取一字节数据*/
+uint8_t soft_i2c_read_byte(I2C_Struct * i2c)
+{
+    uint8_t recv_data = 0;
+    uint16_t temp = 0;
+
+    /*释放SDA总线*/
+    soft_i2c_SDA_set(i2c);
+    /*设置SDA为输入*/
+    soft_I2C_SDA_IN(i2c);
+
+    /*从机准备数据*/
+    soft_i2c_SCL_reset(i2c);
+    /*先读入MSB*/
+    for(int i = 0; i &lt; 8; i++)
+    {
+        /*从机准备数据*/
+        soft_i2c_SCL_reset(i2c);
+        soft_i2c_us_delay(i2c);
+
+        /*拉高时钟准备读取*/
+        soft_i2c_SCL_set(i2c);
+        soft_i2c_us_delay(i2c);
+
+        /*等待从设备准备好了数据释放时钟线*/
+        while(soft_i2c_SCL_input(i2c) == 0)
+        {
+            if(temp++ &gt; 20000)
+                return 0x00;
+        }
+
+        recv_data &lt;&lt;= 1;
+        if(soft_i2c_SDA_read(i2c) == SET)
+            recv_data |= 0x01;
+
+        soft_i2c_SCL_reset(i2c);
+    }
+    
+	return recv_data;
+}
+
+/******************************************软件I2C时序函数 完************************************************/
+</code></pre>
+<h2 id="读写操作部分"><a href="#读写操作部分" class="headerlink" title="读写操作部分"></a>读写操作部分</h2><p>这部分最好是根据自己要<code>操作的模块</code>去编写这个读写函数</p>
+<pre><code class="language-c">/*****************************************************************************
+*  函 数 名：soft_i2c_write_bytes
+*  功能描述：软件I2C发送数据
+*  输入参数：I2C_Struct * i2c              I2C总线
+*            uint8_t Device_Addr    从设备地址
+*            uint8_t Register_Addr  寄存器地址
+*            void *data             数据指针
+             uint16_t data_len      数据长度
+*  输出参数：无
+*  返 回 值：uint8_t
+*  
+*  修改历史：
+*         1. 日    期：2022年9月19日
+*            作    者：九月听雨眠
+*            修改内容：新生成函数
+*  
+*****************************************************************************/
+uint8_t soft_i2c_write_bytes(I2C_Struct * i2c, uint8_t Device_Addr, uint8_t Register_Addr, void *data, uint16_t data_len)
+{
+    uint8_t *SendData = (uint8_t *)data;
+    /*开始传输*/
+    soft_i2c_start(i2c);
+
+    /*传输器件地址, 写模式*/
+    soft_i2c_send_byte(i2c, (Device_Addr &amp; 0xFE));
+
+    /*确认ACK, ACK不对直接返回*/
+    if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+    {
+        SOFT_I2C_PRINT(&quot;ADDR ACK Error\r\n&quot;);
+        goto STOP;
+    }
+
+    /*传输寄存器地址*/
+    soft_i2c_send_byte(i2c, Register_Addr);
+
+    /*确认ACK, ACK不对直接返回*/
+    if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+    {
+        SOFT_I2C_PRINT(&quot;ADDR ACK Error\r\n&quot;);
+        goto STOP;
+    }
+
+    /*循环传输字节数据*/
+    for(int i = 0; i &lt; data_len; i++)
+    {
+        soft_i2c_send_byte(i2c, *SendData);
+
+        if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+        {
+            SOFT_I2C_PRINT(&quot;Send data[%d] ACK Error\r\n&quot;, i);
+            goto STOP;
+        }
+
+        SendData++;
+    }
+
+    /*发送结束信号*/
+    soft_i2c_stop(i2c);
+    return SUCCESS;
+    
+STOP:
+    soft_i2c_stop(i2c);
+    return ERROR;
+}
+
+/*****************************************************************************
+*  函 数 名：soft_i2c_read_bytes
+*  功能描述：软件I2C读取数据
+*  输入参数：I2C_Struct * i2c       I2C总线
+*            uint8_t Device_Addr    设备地址
+*            uint8_t Register_Addr  寄存器地址
+*            void *data             读取数据buff
+*            uint16_t data_len      读取数据长度
+*  输出参数：无
+*  返 回 值：uint8_t                
+*  
+*  修改历史：
+*         1. 日    期：2022年9月19日
+*            作    者：九月听雨眠
+*            修改内容：新生成函数
+*  
+*****************************************************************************/
+uint8_t soft_i2c_read_bytes(I2C_Struct * i2c, uint8_t Device_Addr, uint8_t Register_Addr, void *data, uint16_t data_len)
+{
+    uint8_t *RecvData = (uint8_t *)data;
+    /*开始传输*/
+    soft_i2c_start(i2c);
+
+    /*传输器件地址, 写模式*/
+    soft_i2c_send_byte(i2c, (Device_Addr &amp; 0xFE));
+
+    /*确认ACK*/
+    if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+    {
+        SOFT_I2C_PRINT(&quot;SEND ADDR ACK Error\r\n&quot;);
+        goto STOP;
+    }
+
+    /*传输寄存器地址*/
+    soft_i2c_send_byte(i2c, Register_Addr);
+
+    /*确认ACK, ACK不对直接返回*/
+    if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+    {
+        SOFT_I2C_PRINT(&quot;Register ACK Error\r\n&quot;);
+        goto STOP;
+    }
+    
+    /*重新开始传输信号*/
+    soft_i2c_start(i2c);
+    /*传输器件地址, 读模式*/
+    soft_i2c_send_byte(i2c, (Device_Addr | 0x01));
+
+    /*确认ACK*/
+    if(soft_i2c_wait_ack(i2c) != I2C_ACK)
+    {
+        SOFT_I2C_PRINT(&quot;READ ADDR ACK Error\r\n&quot;);
+        goto STOP;
+    }
+    
+    /*循环读取字节数据*/
+    for(int i = 0; i &lt; data_len; i++)
+    {
+        *RecvData = soft_i2c_read_byte(i2c);
+        /*发送应答信号*/
+        if(i == data_len - 1)
+            soft_i2c_nack(i2c);
+        else
+            soft_i2c_ack(i2c);
+
+        RecvData++;
+    }
+        /*发送结束信号*/
+    soft_i2c_stop(i2c);
+    return SUCCESS;
+    
+STOP:
+    soft_i2c_stop(i2c);
+    return ERROR;
+
+}
+</code></pre>
+
+    </div>
+    
+    
+    
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2026 - 2026 松子の小窝
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;puppet-sky
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    <canvas
+    id="fireworks"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 32767"></canvas>
+    <script src="https://s4.zstatic.net/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="/js/fireworks.min.js"></script>
+    <canvas
+    id="background"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1"></canvas>
+    <!-- 调用配置 -->
+    <script src="/js/particles-bg.js"></script>
+    
+    
+    
+
+
+
+
+    
+</body>
+</html>
