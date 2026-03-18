@@ -122,5 +122,5 @@ theme: particlex
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/puppet-sky/puppet-sky.github.io.git
+  repo: git@github.com:Puppet-Sky/puppet-sky.github.io.git
   branch: publish
